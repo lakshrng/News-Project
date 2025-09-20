@@ -1,0 +1,26 @@
+<%- include("partials/header") %>
+<section class="section">
+  <h2 class="page-title">Latest News</h2>
+  <% if (articles.length === 0) { %>
+    <p class="muted">No news found.</p>
+  <% } else { %>
+    <div class="news-container">
+      <% articles.forEach(article => { %>
+        <div class="news-card">
+          <img src="<%= article.image_url %>" alt="News image">
+          <h3>
+            <a href="<%= article.url %>" target="_blank"><%= article.title %></a>
+          </h3>
+          <p><%= article.snippet %></p>
+          <small>
+            Source: <%= article.source %> | Published: <%= article.published_at %>
+          </small>
+
+          <!-- Analysis button -->
+          <a class="btn" href="/analysis?title=<%- encodeURIComponent(article.title) %>&snippet=<%- encodeURIComponent(article.snippet || '') %>">Read Analysis</a>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+<%- include("partials/footer") %>
