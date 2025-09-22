@@ -6,7 +6,8 @@ router.get("/", (req, res) => {
   res.render("index");
 });
 
-router.get("/news", getNews);
+router.get("/news", (req, res) => res.redirect("/"));
+router.post("/news", getNews);
 
 // New POST route for AI analysis
 router.post("/analysis", express.json(), getAnalysis);

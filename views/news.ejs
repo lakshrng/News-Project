@@ -7,17 +7,20 @@
     <div class="news-container">
       <% articles.forEach(article => { %>
         <div class="news-card">
-          <img src="<%= article.image_url %>" alt="News image">
+          <% if (article.image_url) { %>
+            <img src="<%= article.image_url %>" alt="News image" onerror="this.style.display='none'">
+          <% } %>
           <h3>
             <a href="<%= article.url %>" target="_blank"><%= article.title %></a>
           </h3>
           <p><%= article.snippet %></p>
           <small>
             Source: <%= article.source %> | Published: <%= article.published_at %>
+            <% if (article.category) { %> | Category: <%= article.category %> <% } %>
           </small>
 
           <!-- Analysis button -->
-          <a class="btn" href="/analysis?title=<%- encodeURIComponent(article.title) %>&snippet=<%- encodeURIComponent(article.snippet || '') %>">Read Analysis</a>
+          <a class="btn" href="/analysis?title=<%- encodeURIComponent(article.title) %>&snippet=<%- encodeURIComponent(article.snippet || '') %>&image_url=<%- encodeURIComponent(article.image_url || '') %>">Read Analysis</a>
         </div>
       <% }) %>
     </div>
