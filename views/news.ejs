@@ -2,16 +2,12 @@
 <section class="section">
   <h2 class="page-title">Latest News</h2>
   <p class="subtitle"><small>Political News · India & World (last 24 hours)</small></p>
-  <form id="newsSearchForm" onsubmit="return false" style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-    <input type="text" id="newsSearchInput" placeholder="Search headlines or snippets..." aria-label="Search news" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:10px;" />
-    <button type="button" class="btn" id="newsSearchBtn">Search</button>
-  </form>
   <% if (articles.length === 0) { %>
     <p class="muted">No news found.</p>
   <% } else { %>
     <div class="news-container">
       <% articles.forEach((article, idx) => { %>
-        <div class="news-card" id="a-<%= idx %>" data-title="<%- (article.title || '').toLowerCase() %>" data-snippet="<%- (article.snippet || '').toLowerCase() %>">
+        <div class="news-card" id="a-<%= idx %>">
           <% if (article.image_url) { %>
             <img src="<%= article.image_url %>" alt="News image" onerror="this.style.display='none'">
           <% } %>
