@@ -1,0 +1,2 @@
+/* Use local theme copied from server public/css/style.css to avoid absolute path issues */
+@import './theme.css';
