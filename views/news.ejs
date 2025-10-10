@@ -1,53 +1,66 @@
-<%- include("partials/header", { marqueeItems: (articles || []).map((a, i) => ({ title: a.title, url: '/news#a-' + i })) }) %>
+<%- include("partials/header") %>
+
 <section class="section">
   <h2 class="page-title">Latest News</h2>
   <p class="subtitle"><small>Political News · India & World (last 24 hours)</small></p>
-  <% if (articles.length === 0) { %>
-    <p class="muted">No news found.</p>
-  <% } else { %>
-    <div class="news-container">
-      <% articles.forEach((article, idx) => { %>
-        <div class="news-card" id="a-<%= idx %>">
-          <% if (article.image_url) { %>
-            <img src="<%= article.image_url %>" alt="News image" onerror="this.style.display='none'">
-          <% } %>
-          <h3>
-            <a href="<%= article.url %>" target="_blank"><%= article.title %></a>
-          </h3>
-          <p><%= article.snippet %></p>
-          <small>
-            Published: <%= article.published_at %>
-            <% if (article.category) { %> | Category: <%= article.category %> <% } %>
-          </small>
 
-          <!-- Analysis button -->
-          <a class="btn" href="/analysis?title=<%- encodeURIComponent(article.title) %>&snippet=<%- encodeURIComponent(article.snippet || '') %>&image_url=<%- encodeURIComponent(article.image_url || '') %>">Read Analysis</a>
-        </div>
-      <% }) %>
-    </div>
-  <% } %>
+  <% const categories = Object.keys(articlesByCategory); %>
+
+  <% categories.forEach(cat => { %>
+    <h3 class="category-title"><%= cat.charAt(0).toUpperCase() + cat.slice(1) %></h3>
+
+    <% if (!articlesByCategory[cat] || articlesByCategory[cat].length === 0) { %>
+      <p class="muted">No news found in <%= cat %>.</p>
+    <% } else { %>
+      <div class="news-container">
+        <% articlesByCategory[cat].forEach((article, idx) => { %>
+          <div class="news-card" id="<%= cat %>-<%= idx %>">
+            <% if (article.image_url) { %>
+              <img src="<%= article.image_url %>" alt="News image" onerror="this.style.display='none'">
+            <% } %>
+            <h4>
+              <a href="<%= article.url %>" target="_blank"><%= article.title %></a>
+            </h4>
+            <p><%= article.snippet %></p>
+            <small>
+              Published: <%= article.published_at %> | Category: <%= article.category %>
+            </small>
+
+            <a class="btn" href="/analysis?title=<%- encodeURIComponent(article.title) %>&snippet=<%- encodeURIComponent(article.snippet || '') %>&image_url=<%- encodeURIComponent(article.image_url || '') %>">Read Analysis</a>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+  <% }) %>
 </section>
+
 <script>
-  (function(){
-    const input = document.getElementById('newsSearchInput');
-    const btn = document.getElementById('newsSearchBtn');
-    if (!input || !btn) return;
-    function searchAndScroll(){
-      const q = (input.value || '').toLowerCase().trim();
-      if (!q) return;
-      const cards = Array.from(document.querySelectorAll('.news-card'));
-      const match = cards.find(c => (c.dataset.title||'').includes(q) || (c.dataset.snippet||'').includes(q));
-      if (match) {
-        const id = match.getAttribute('id');
-        if (id) { location.hash = '#' + id; }
-        match.classList.remove('highlight-pulse');
-        void match.offsetWidth; // reflow to restart animation
-        match.classList.add('highlight-pulse');
-        input.blur();
-      }
+(function(){
+  const input = document.getElementById('newsSearchInput');
+  const btn = document.getElementById('newsSearchBtn');
+  if (!input || !btn) return;
+
+  function searchAndScroll(){
+    const q = (input.value || '').toLowerCase().trim();
+    if (!q) return;
+
+    const cards = Array.from(document.querySelectorAll('.news-card'));
+    const match = cards.find(c => (c.dataset.title||'').toLowerCase().includes(q) || (c.dataset.snippet||'').toLowerCase().includes(q));
+
+    if (match) {
+      const id = match.getAttribute('id');
+      if (id) { location.hash = '#' + id; }
+      match.classList.remove('highlight-pulse');
+      void match.offsetWidth; // reflow
+      match.classList.add('highlight-pulse');
+      input.blur();
     }
-    btn.addEventListener('click', searchAndScroll);
-    input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); searchAndScroll(); } });
-  })();
+  }
+
+  btn.addEventListener('click', searchAndScroll);
+  input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); searchAndScroll(); } });
+})();
 </script>
+
 <%- include("partials/footer") %>
