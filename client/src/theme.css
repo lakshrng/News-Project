@@ -387,7 +387,7 @@ footer {
 .orbit--two { width: 180px; height: 180px; animation: orbit-spin 24s linear infinite reverse; }
 .orbit--three { width: 120px; height: 120px; animation: orbit-spin 36s linear infinite; }
 @keyframes orbit-spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-@keyframes dot-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(0.9); filter: brightness(1); } 50% { transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.2); }
+@keyframes dot-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(0.9); filter: brightness(1); } 50% { transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.2); } }
 
 /* Rotating red/black wheel (filled) */
 .rot-wheel { position: fixed; left: 24px; bottom: 24px; width: 220px; height: 220px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, #dc2626 0 10deg, #000000 10deg 20deg); animation: wheel-spin 12s linear infinite; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.35)); pointer-events: none; z-index: 3; }

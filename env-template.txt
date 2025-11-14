@@ -1,0 +1,20 @@
+# Copy this content to server/.env file
+
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# Database
+MONGODB_URI=mongodb://localhost:27017/news-project
+
+# JWT Secret
+JWT_SECRET=news-project-super-secret-jwt-key-2024
+
+# Google AI API Key (get from https://makersuite.google.com/app/apikey)
+GOOGLE_API_KEY=your-google-ai-api-key-here
+
+# Client URL (for CORS)
+CLIENT_URL=http://localhost:5173
+
+# News API Configuration (original format)
+NEWS_API_TOKEN=your-news-api-token-here

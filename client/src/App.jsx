@@ -1,5 +1,20 @@
-import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import axios from 'axios'
 import './index.css'
+
+// Import contexts and components
+import { AuthProvider } from './contexts/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import NewsList from './components/Public/NewsList'
+import NewsDetail from './components/Public/NewsDetail'
+import ExternalNews from './components/Public/ExternalNews'
+import NewsNavigation from './components/Public/NewsNavigation'
+import AdminLogin from './components/Admin/AdminLogin'
+import AdminDashboard from './components/Admin/AdminDashboard'
+import NewsEditor from './components/Admin/NewsEditor'
+import NewsManager from './components/Admin/NewsManager'
 
 function Layout({ children }) {
   return (
@@ -12,10 +27,12 @@ function Layout({ children }) {
           </Link>
           <nav>
             <NavLink to="/" end>Home</NavLink>
-            <NavLink to="/news">Latest News</NavLink>
+            <NavLink to="/external-news">External News</NavLink>
+            <NavLink to="/legacy/news">Legacy News</NavLink>
           </nav>
         </div>
       </header>
+      <NewsNavigation />
       <main className="container">
         {children}
       </main>
@@ -29,11 +46,15 @@ function Layout({ children }) {
 }
 
 function HomePage() {
+  const navigate = useNavigate()
+  const [locale, setLocale] = useState('')
+  const [language, setLanguage] = useState('')
+  const [date, setDate] = useState('')
   return (
     <section className="section">
       <h2 className="page-title">AI News Generator</h2>
       <p className="subtitle">Generate synthetic headlines and snippets by category.</p>
-      <form action="/news" method="post" onSubmit={(e)=>e.preventDefault()}>
+      <form onSubmit={(e)=>{ e.preventDefault(); const params = new URLSearchParams(); if (locale) params.set('locale', locale); if (language) params.set('language', language); if (date) params.set('published_on', date); navigate(`/legacy/news${params.toString() ? `?${params.toString()}` : ''}`) }}>
         <select aria-label="Category" defaultValue="general">
           <option value="general">General</option>
           <option value="business">Business</option>
@@ -44,27 +65,29 @@ function HomePage() {
           <option value="science">Science</option>
           <option value="health">Health</option>
         </select>
-        <input type="text" placeholder="Language (e.g. en, es)" />
-        <input type="text" placeholder="Country code (optional)" />
-        <Link className="btn" to="/news">Generate</Link>
+        <input value={language} onChange={(e)=>setLanguage(e.target.value)} type="text" placeholder="Language (e.g. en, es)" />
+        <input value={locale} onChange={(e)=>setLocale(e.target.value)} type="text" placeholder="Country code (optional)" />
+        <input value={date} onChange={(e)=>setDate(e.target.value)} type="date" />
+        <button className="btn" type="submit">Generate</button>
       </form>
     </section>
   )
 }
 
-import { useEffect, useState } from 'react'
-import axios from 'axios'
-
 function NewsPage() {
   const [data, setData] = useState({ articles: [], articlesByCategory: null })
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
+  const params = new URLSearchParams(window.location.search)
+  const locale = params.get('locale') || ''
+  const language = params.get('language') || ''
+  const published_on = params.get('published_on') || ''
 
   useEffect(() => {
     let mounted = true
     async function load() {
       try {
-        const resp = await axios.get('/api/news')
+        const resp = await axios.get('http://localhost:5000/api/external-news', { params: { locale, language, published_on } })
         if (!mounted) return
         setData({
           articles: resp.data?.articles || resp.data || [],
@@ -78,7 +101,7 @@ function NewsPage() {
     }
     load()
     return () => { mounted = false }
-  }, [])
+  }, [locale, language, published_on])
 
   const filtered = data.articles.filter(a => {
     if (!q) return true
@@ -139,7 +162,7 @@ function AnalysisPage() {
     let mounted = true
     async function load() {
       try {
-        const resp = await axios.post('/api/analysis', { title, snippet })
+        const resp = await axios.post('http://localhost:5000/api/analysis', { title, snippet })
         if (!mounted) return
         setHtml(resp.data?.analysis || '')
       } catch (_) {
@@ -189,15 +212,42 @@ function NotFound() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/analysis" element={<AnalysisPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Layout>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<NewsList />} />
+            <Route path="/news/:id" element={<NewsDetail />} />
+            <Route path="/external-news" element={<ExternalNews />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/news" element={
+              <ProtectedRoute requireAdmin={true}>
+                <NewsManager />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/news/:id" element={
+              <ProtectedRoute requireAdmin={true}>
+                <NewsEditor />
+              </ProtectedRoute>
+            } />
+            
+            {/* Legacy Routes */}
+            <Route path="/legacy" element={<HomePage />} />
+            <Route path="/legacy/news" element={<NewsPage />} />
+            <Route path="/analysis" element={<AnalysisPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+        <Toaster position="top-right" />
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

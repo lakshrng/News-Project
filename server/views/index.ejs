@@ -1,0 +1,14 @@
+<%- include("partials/header") %>
+<section class="section">
+  <h2 class="page-title">Welcome to News Aggregator</h2>
+  <p class="subtitle">Search top headlines by country, language, and date.</p>
+  <form action="/news" method="get">
+    <input type="text" name="locale" placeholder="Country code (e.g. us, ca)">
+    <input type="text" name="language" placeholder="Language (e.g. en, es)">
+    <input type="date" name="published_on">
+    <button type="submit" class="btn">Get News</button>
+  </form>
+</section>
+<%- include("partials/footer") %>
+
+
