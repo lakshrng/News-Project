@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 📰 News Project - Admin Blogging System
 
 A complete news blogging platform where admins can generate, manage, and publish AI-generated news articles, while the public can view and comment on published content.
@@ -244,3 +245,9 @@ For support or questions, please open an issue in the repository.
 ---
 
 **Happy Coding! 🎉**
+=======
+# News-Project
+
+#Run command
+    -npm start
+>>>>>>> 4f70c6083a8db5fb99a3dcd7842bce38f7bdff11

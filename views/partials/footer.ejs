@@ -1,0 +1,54 @@
+</main>
+  <footer>
+    <div class="container">
+      <p>© <%= new Date().getFullYear() %> News Aggregator · <span class="muted">Powered by Express & EJS</span></p>
+    </div>
+  </footer>
+  <div class="page-loader" id="pageLoader" aria-hidden="true">
+    <div class="box">
+      <div class="spinner">
+        <div class="spinner-dot"></div>
+        <div class="spinner-dot"></div>
+        <div class="spinner-dot"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function(){
+      const loader = document.getElementById('pageLoader');
+      function show(){ if(loader){ loader.classList.add('active'); } }
+      function hide(){ if(loader){ loader.classList.remove('active'); } }
+      window.addEventListener('pageshow', hide);
+      window.addEventListener('load', hide);
+      document.addEventListener('submit', function(e){
+        const target = e.target;
+        if (target && target.tagName === 'FORM') { show(); }
+      }, true);
+      document.addEventListener('click', function(e){
+        const a = e.target.closest('a');
+        if (a && a.target !== '_blank' && a.href && a.origin === location.origin) {
+          show();
+        }
+      });
+      window.addEventListener('beforeunload', show);
+    })();
+  </script>
+  <script>
+    // Highlight active nav link based on current path
+    (function(){
+      try {
+        var links = document.querySelectorAll('header nav a');
+        var path = location.pathname.replace(/\/$/, '') || '/';
+        links.forEach(function(a){
+          var href = a.getAttribute('href') || '';
+          var normalized = href.replace(/\/$/, '') || '/';
+          if (normalized === path) {
+            a.classList.add('active');
+            a.setAttribute('aria-current', 'page');
+          }
+        });
+      } catch(_) {}
+    })();
+  </script>
+</body>
+</html>

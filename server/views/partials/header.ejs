@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+<<<<<<< HEAD:server/views/partials/header.ejs
+=======
+  <!-- background moved to footer as single instance -->
+>>>>>>> 4f70c6083a8db5fb99a3dcd7842bce38f7bdff11:views/partials/header.ejs
   <header>
     <div class="container header-inner">
       <a class="brand" href="/">
@@ -22,6 +26,21 @@
       </nav>
     </div>
   </header>
+  <% if (typeof marqueeItems !== 'undefined' && Array.isArray(marqueeItems) && marqueeItems.length) { %>
+  <div class="marquee" aria-label="Latest headlines ticker">
+    <div class="container marquee__inner">
+      <span class="marquee__dot" aria-hidden="true"></span>
+      <div class="marquee__viewport" style="overflow:hidden; flex:1;">
+        <div class="marquee__track">
+          <% const repeated = marqueeItems.concat(marqueeItems); %>
+          <% repeated.forEach(function(item){ %>
+            <a class="marquee__item" href="<%= item.url %>" rel="noopener"> <%= item.title %> </a>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } %>
   <main class="container">
 
 
