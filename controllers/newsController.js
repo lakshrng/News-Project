@@ -1,59 +1,78 @@
-const axios = require("axios");
-const { API_URL, API_KEY } = require("../config/config");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-// Initialize the AI client
-const ai = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-
-// Fetch news from NewsAPI
+const fetchSerpApiByCategories = require("../helpers/fetchSerpApiByCategories");
 exports.getNews = async (req, res) => {
   try {
-    const { locale, language, published_on } = req.query;
+    let articlesByCategory = null;
+    let marqueeItems = [];
+    let articles = [];
 
-    const response = await axios.get(API_URL, {
-      params: {
-        api_token: API_KEY,
-        locale: locale || "us",
-        language: language || "en",
-        published_on: published_on || ""
+    try {
+      // Try SerpAPI for categorized news
+      articlesByCategory = await fetchSerpApiByCategories();
+
+      if (articlesByCategory) {
+        // Limit each category to 5 articles
+        Object.keys(articlesByCategory).forEach(cat => {
+          articlesByCategory[cat] = articlesByCategory[cat]?.slice(0, 5) || [];
+        });
+
+        return res.render("news", {
+          articlesByCategory
+        });
       }
+    } catch (e) {
+      console.warn("⚠️ SerpAPI fetch failed:", e?.message || e);
+    }
+
+    // If no data or API failed, render empty structure
+    const emptyCategories = {
+      latest: [],
+      politics: [],
+      sports: [],
+      business: [],
+      science: []
+    };
+
+    return res.render("news", {
+      articles: [],
+      articlesByCategory: emptyCategories,
+      marqueeItems: []
     });
 
-    const articles = response.data.data || [];
-    res.render("news", { articles });
   } catch (error) {
-    console.error("Error fetching news:", error.message);
-    res.render("error", { message: "Could not fetch news. Try again later." });
+    console.error("❌ Error generating AI news:", error.message);
+    res.status(500).render("error", { message: "Could not generate AI news." });
   }
 };
 
-// Generate AI-powered analysis for a given article
 exports.getAnalysis = async (req, res) => {
   try {
-    const { title, snippet } = req.body;
-    const prompt = `Provide a concise, reader-friendly analysis of the following news article:\n\nTitle: ${title}\n\nSnippet: ${snippet}`;
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: "Missing text for analysis" });
+    }
 
-    // Use Gemini 2.5 Flash model
-    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const result = await model.generateContent(prompt);
+    // Placeholder for AI analysis logic
+    const analysisResult = {
+      sentiment: "positive",
+      summary: "The news article is generally optimistic about recent developments.",
+      keywords: ["innovation", "growth", "technology"]
+    };
 
-    res.json({ analysis: result.response.text() });
+    res.json({ analysis: analysisResult });
   } catch (error) {
-    console.error("Error generating analysis:", error.message);
-    res.status(500).json({ error: "Failed to generate analysis" });
+    console.error("❌ Error in analysis:", error.message);
+    res.status(500).json({ error: "Analysis failed" });
   }
 };
 
-// Render analysis page and fetch AI result client-side
 exports.renderAnalysisPage = (req, res) => {
-  try {
-    const { title = "", snippet = "" } = req.query;
-    if (!title) {
-      return res.render("error", { message: "Missing article title for analysis." });
-    }
-    res.render("analysis", { title, snippet });
-  } catch (error) {
-    console.error("Error rendering analysis page:", error.message);
-    res.render("error", { message: "Could not open analysis page." });
-  }
+  const { title = "", snippet = "", image_url = "" } = req.query;
+  res.render("analysis", { title, snippet, image_url });
+};
+
+
+module.exports = {
+  getNews: exports.getNews,
+  getAnalysis: exports.getAnalysis,
+  renderAnalysisPage: exports.renderAnalysisPage
 };

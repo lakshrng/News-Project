@@ -1,9 +1,18 @@
-<%- include("partials/header") %>
+<%- include("partials/header", { marqueeItems: [] }) %>
 <section class="section">
   <h2 class="page-title">AI Analysis</h2>
   <p class="subtitle">For: <strong><%= title %></strong></p>
+  <% if (typeof image_url === 'string' && image_url) { %>
+    <div class="news-card" style="padding:0; overflow:hidden; margin-bottom:16px; max-width:340px;">
+      <img 
+        src="<%= image_url %>" 
+        alt="Article image" 
+        style="display:block; width:320px; height:180px; aspect-ratio:16/9; object-fit:cover; background:#eee; margin:auto;" 
+        onerror="this.style.display='none'">
+    </div>
+  <% } %>
 
-  <div id="analysisBox" class="news-card" style="min-height:140px; display:flex; align-items:center; justify-content:center;">
+  <div id="analysisBox" class="news-card" style="min-height:140px; display:flex; align-items:center; justify-content:center;" data-title="<%- encodeURIComponent(title || '') %>" data-snippet="<%- encodeURIComponent(snippet || '') %>">
     <div class="spinner">
       <div class="spinner-dot"></div>
       <div class="spinner-dot"></div>
@@ -19,8 +28,11 @@
     (async function() {
       const box = document.getElementById('analysisBox');
       try {
-        const payload = <%- JSON.stringify({ title: title || "", snippet: snippet || "" }).replace(/<\/script>/g, '<\\/script>') %>;
-  
+        const payload = {
+          title: decodeURIComponent(box.dataset.title || ''),
+          snippet: decodeURIComponent(box.dataset.snippet || '')
+        };
+
         const response = await fetch('/analysis', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

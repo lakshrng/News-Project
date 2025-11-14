@@ -3,7 +3,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const newsRoutes = require("./routes/news");
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 const app = express();
 
 // Middleware
