@@ -8,6 +8,7 @@ export default function ExternalNewsPage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadNews();
@@ -15,17 +16,19 @@ export default function ExternalNewsPage() {
 
   const loadNews = async () => {
     try {
-      const resp = await axios.get('/api/news');
-      console.log('News API response:', resp.data);
+      setError(null);
+      const resp = await axios.get('/api/news?limit=10');
       if (resp.data?.error) {
         console.error('API Error:', resp.data.error);
-        console.error('API Details:', resp.data.details);
+        setError(resp.data.error);
+        setArticles([]);
+        return;
       }
       setArticles(resp.data?.articles || []);
-    } catch (error) {
-      console.error('Failed to load news:', error);
-      console.error('Error response:', error.response?.data);
+    } catch (err) {
+      console.error('Failed to load news:', err);
       setArticles([]);
+      setError(err.response?.data?.error || 'Failed to load news');
     } finally {
       setLoading(false);
     }
@@ -34,7 +37,7 @@ export default function ExternalNewsPage() {
   const filtered = articles.filter(a => {
     if (!q) return true;
     const t = (a.title || '').toLowerCase();
-    const s = (a.snippet || '').toLowerCase();
+    const s = (a.summary || a.snippet || '').toLowerCase();
     const needle = q.toLowerCase().trim();
     return t.includes(needle) || s.includes(needle);
   });
@@ -55,7 +58,11 @@ export default function ExternalNewsPage() {
         <button className="btn" onClick={() => setQ(q)}>Search</button>
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="news-card" style={{ minHeight: 120, padding: 24, background: '#fee', border: '1px solid #fcc', borderRadius: 12 }}>
+          <strong>Error:</strong> {error}
+        </div>
+      ) : loading ? (
         <div className="news-card" style={{ minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="spinner"><div className="spinner-dot"></div><div className="spinner-dot"></div><div className="spinner-dot"></div></div>
         </div>
@@ -68,12 +75,14 @@ export default function ExternalNewsPage() {
               {a.image_url ? (
                 <img src={a.image_url} alt="News image" onError={(e) => { e.currentTarget.style.display = 'none' }} />
               ) : null}
-              <h3><a href={a.url} target="_blank" rel="noreferrer">{a.title}</a></h3>
-              <p>{a.snippet}</p>
-              <small>Published: {a.published_at} {a.category ? ` | Category: ${a.category}` : ''}</small>
+              <h3><a href={a.url || a.link} target="_blank" rel="noreferrer">{a.title}</a></h3>
+              <p>{a.summary || a.snippet}</p>
+              <small>
+                Source: {a.source || 'Google News'} {a.published_at ? ` · ${a.published_at}` : ''}
+              </small>
               <Link 
                 className="btn" 
-                href={`/analysis?title=${encodeURIComponent(a.title)}&snippet=${encodeURIComponent(a.snippet || '')}&image_url=${encodeURIComponent(a.image_url || '')}`}
+                href={`/analysis?title=${encodeURIComponent(a.title)}&snippet=${encodeURIComponent(a.summary || a.snippet || '')}&image_url=${encodeURIComponent(a.image_url || '')}`}
               >
                 Read Analysis
               </Link>

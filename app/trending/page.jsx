@@ -38,17 +38,7 @@ export default function TrendingNewsPage() {
   };
 
   useEffect(() => {
-    // Fetch on component mount
     fetchTrendingNews();
-
-    // Set up auto-refresh every 30 minutes
-    const refreshInterval = setInterval(() => {
-      console.log('Auto-refreshing trending news...');
-      fetchTrendingNews(true);
-    }, 30 * 60 * 1000); // 30 minutes
-
-    // Cleanup interval on unmount
-    return () => clearInterval(refreshInterval);
   }, []);
 
   const handleManualRefresh = () => {
@@ -178,8 +168,8 @@ export default function TrendingNewsPage() {
         color: '#666'
       }}>
         <p style={{ margin: '0' }}>
-          <strong>Note:</strong> Trending news is automatically refreshed every 30 minutes. 
-          Click the Refresh button to update manually.
+          <strong>Note:</strong> Trending news refreshes when you load this page or press Refresh.
+          This manual flow helps us stay within Gemini rate limits.
         </p>
       </div>
     </section>
