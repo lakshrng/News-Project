@@ -24,6 +24,16 @@ export default function NewsNavigation() {
           Published News
         </Link>
         <Link 
+          href="/trending" 
+          style={{ 
+            color: pathname === '/trending' ? 'var(--red)' : 'var(--muted)',
+            textDecoration: 'none',
+            fontWeight: pathname === '/trending' ? 600 : 400
+          }}
+        >
+          🔥 Trending News
+        </Link>
+        <Link 
           href="/external-news" 
           style={{ 
             color: pathname === '/external-news' ? 'var(--red)' : 'var(--muted)',
