@@ -1,13 +1,19 @@
 /**
  * Fetch Google Trends using SerpAPI
  * Returns trending searches for a given geo location
+ * Server-side only - this module uses Node.js-only dependencies
  */
 
-// Dynamic import for CommonJS module
+import { createRequire } from 'module';
+
+// Create require function for CommonJS module loading
+const require = createRequire(import.meta.url);
+
+// Lazy load CommonJS module
 let getJson;
-async function getSerpApi() {
+function getSerpApi() {
   if (!getJson) {
-    const serpapi = await import("serpapi");
+    const serpapi = require("serpapi");
     getJson = serpapi.getJson;
   }
   return getJson;
@@ -26,7 +32,7 @@ async function fetchTrendingSearches(geo = "IN", apiKey) {
       return;
     }
 
-    const getJsonFunc = await getSerpApi();
+    const getJsonFunc = getSerpApi();
 
     getJsonFunc(
       {
@@ -71,7 +77,7 @@ async function fetchInterestOverTime(queries, apiKey) {
     }
 
     const queryString = queries.join(",");
-    const getJsonFunc = await getSerpApi();
+    const getJsonFunc = getSerpApi();
 
     getJsonFunc(
       {
