@@ -1,12 +1,18 @@
 /**
  * Fetch top news articles for a given trend using SerpAPI Google News
+ * Server-side only - this module uses Node.js-only dependencies
  */
 
-// Dynamic import for CommonJS module
+import { createRequire } from 'module';
+
+// Create require function for CommonJS module loading
+const require = createRequire(import.meta.url);
+
+// Lazy load CommonJS module
 let getJson;
-async function getSerpApi() {
+function getSerpApi() {
   if (!getJson) {
-    const serpapi = await import("serpapi");
+    const serpapi = require("serpapi");
     getJson = serpapi.getJson;
   }
   return getJson;
@@ -31,7 +37,7 @@ async function fetchNewsForTrend(query, apiKey, num = 10) {
       return;
     }
 
-    const getJsonFunc = await getSerpApi();
+    const getJsonFunc = getSerpApi();
 
     getJsonFunc(
       {
