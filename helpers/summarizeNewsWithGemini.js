@@ -5,11 +5,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const CHUNK_SIZE = 5;
-const GROUNDED_TOOLS = [
+// Make grounding optional - set ENABLE_GROUNDING=true in env to enable
+const ENABLE_GROUNDING = process.env.ENABLE_GROUNDING === 'true';
+const GROUNDED_TOOLS = ENABLE_GROUNDING ? [
   {
     googleSearch: {},
   },
-];
+] : undefined;
 
 function chunkArray(arr = [], size = 5) {
   const chunks = [];
@@ -37,10 +39,11 @@ async function summarizeNewsChunk(chunk, apiKey) {
     date: article.date || article.published_at || "Unknown time",
   }));
 
-  const prompt = `You will receive up to ${chunk.length} Google News results as JSON.
-For each story, write EXACTLY 4 sentences (80-120 words total) that explain the key development and why it matters for Indian readers.
-Before drafting the summary for a story, you MUST call google_search with the story title (or the most relevant keywords) to retrieve fresh context specific to that story.
-Use ONLY the google_search results you just fetched for that story and cite at least one fetched source inline (e.g., "— Source: BBC"). Summaries without a citation are invalid.
+  // Simplified prompt - grounding is optional to avoid timeouts
+  const prompt = ENABLE_GROUNDING 
+    ? `You will receive up to ${chunk.length} Google News results as JSON.
+For each story, write 3-4 sentences (80-120 words total) that explain the key development and why it matters for Indian readers.
+You can optionally use google_search if you need additional context, but it's not mandatory.
 Keep the order identical to the input.
 
 Input articles:
@@ -50,20 +53,47 @@ Respond ONLY with valid JSON in this shape (no extra text, code fences, or comme
 [
   {
     "order": 1,
-    "summary": "Four-sentence summary here."
+    "summary": "Three to four sentence summary here."
+  }
+]`
+    : `You will receive up to ${chunk.length} Google News results as JSON.
+For each story, write 3-4 sentences (80-120 words total) that explain the key development and why it matters for Indian readers.
+Keep the order identical to the input.
+
+Input articles:
+${JSON.stringify(chunkPayload, null, 2)}
+
+Respond ONLY with valid JSON in this shape (no extra text, code fences, or commentary):
+[
+  {
+    "order": 1,
+    "summary": "Three to four sentence summary here."
   }
 ]`;
 
   try {
-    const result = await model.generateContent({
+    // Add timeout wrapper (20 seconds for faster fallback)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Gemini API timeout after 20 seconds")), 20000);
+    });
+
+    const generateOptions = {
       contents: [
         {
           role: "user",
           parts: [{ text: prompt }],
         },
       ],
-      tools: GROUNDED_TOOLS,
-    });
+    };
+
+    // Only add tools if grounding is enabled
+    if (GROUNDED_TOOLS) {
+      generateOptions.tools = GROUNDED_TOOLS;
+    }
+
+    const apiPromise = model.generateContent(generateOptions);
+
+    const result = await Promise.race([apiPromise, timeoutPromise]);
     const response = result.response.text() || "";
     const jsonMatch = response.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
@@ -72,8 +102,8 @@ Respond ONLY with valid JSON in this shape (no extra text, code fences, or comme
     const parsed = JSON.parse(jsonMatch[0]);
     return parsed;
   } catch (error) {
-    console.error("Gemini news summary error:", error);
-    // Fallback: return empty array, caller will handle defaults.
+    console.error("Gemini news summary error:", error.message);
+    // Return empty array - caller will use original snippets
     return [];
   }
 }
@@ -85,11 +115,23 @@ Respond ONLY with valid JSON in this shape (no extra text, code fences, or comme
  * @returns {Promise<Array<Object>>}
  */
 async function summarizeNewsArticles(articles = [], apiKey) {
+  if (!articles || articles.length === 0) {
+    return [];
+  }
+
   const summaries = [];
   const chunks = chunkArray(articles, CHUNK_SIZE);
 
-  for (const chunk of chunks) {
-    const chunkResponse = await summarizeNewsChunk(chunk, apiKey);
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    let chunkResponse = [];
+    
+    try {
+      chunkResponse = await summarizeNewsChunk(chunk, apiKey);
+    } catch (error) {
+      console.error(`Error summarizing chunk ${i + 1}:`, error.message);
+      // Continue with empty response - will use original snippets
+    }
 
     chunk.forEach((article, index) => {
       const matchingSummary =
@@ -110,8 +152,8 @@ async function summarizeNewsArticles(articles = [], apiKey) {
     });
 
     // Small pause between chunk requests to respect rate limits.
-    if (chunks.length > 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    if (i < chunks.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
 

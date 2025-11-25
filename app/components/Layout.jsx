@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 export default function Layout({ children }) {
   const pathname = usePathname();
@@ -13,9 +14,30 @@ export default function Layout({ children }) {
     'Sports: National team wins championship'
   ]);
 
-  // Fetch trending headlines for ticker (optional - can be replaced with API call)
+  // Fetch trending headlines for ticker
   useEffect(() => {
-    // You can fetch real trending headlines here
+    const fetchTickerNews = async () => {
+      try {
+        const resp = await axios.get('/api/news?limit=5');
+        if (resp.data?.success && resp.data.articles?.length > 0) {
+          const headlines = resp.data.articles
+            .slice(0, 5)
+            .map(a => a.title)
+            .filter(Boolean);
+          if (headlines.length > 0) {
+            setTickerItems(headlines);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching ticker news:', err);
+        // Keep default items on error
+      }
+    };
+    
+    fetchTickerNews();
+    // Update every 5 minutes
+    const interval = setInterval(fetchTickerNews, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

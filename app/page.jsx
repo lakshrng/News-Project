@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
+import { extractCategory, getCategoryAbbr } from '../helpers/extractCategory';
 
 export default function HomePage() {
   const [articles, setArticles] = useState([]);
@@ -50,16 +51,20 @@ export default function HomePage() {
           </div>
         ) : (
           <>
-            {remainingBriefs.map((article, index) => (
-              <div key={index} className="brief-item">
-                <span className="brief-category">POLITICS</span>
-                <h3 className="brief-headline">
-                  <a href={article.url || article.link} target="_blank" rel="noreferrer">
-                    {article.title}
-                  </a>
-                </h3>
-              </div>
-            ))}
+            {remainingBriefs.map((article, index) => {
+              const category = extractCategory(article.title + ' ' + (article.summary || article.snippet || ''));
+              const categoryAbbr = getCategoryAbbr(category);
+              return (
+                <div key={index} className="brief-item">
+                  <span className="brief-category">{categoryAbbr}</span>
+                  <h3 className="brief-headline">
+                    <a href={article.url || article.link} target="_blank" rel="noreferrer">
+                      {article.title}
+                    </a>
+                  </h3>
+                </div>
+              );
+            })}
           </>
         )}
       </aside>
@@ -133,28 +138,32 @@ export default function HomePage() {
           <span className="watch-chevron">›</span>
         </div>
         
-        <div className="video-thumbnail">
-          <img 
-            src="https://via.placeholder.com/400x200/121212/D32F2F?text=Observer+Watch" 
-            alt="Featured Video"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
+        <div className="video-thumbnail" style={{ cursor: 'pointer' }} onClick={() => window.open('https://www.youtube.com', '_blank')}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(135deg, var(--ink-black) 0%, var(--observer-red) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '14px',
+            textAlign: 'center',
+            padding: '20px'
+          }}>
+            Observer Watch<br />Video Content
+          </div>
           <div className="play-button">▶</div>
         </div>
 
         <ul className="video-list">
-          <li className="video-list-item">
-            <a href="#">Budget 2025: Complete Analysis</a>
-          </li>
-          <li className="video-list-item">
-            <a href="#">Election Coverage: Live Updates</a>
-          </li>
-          <li className="video-list-item">
-            <a href="#">Tech Industry: Growth Report</a>
-          </li>
-          <li className="video-list-item">
-            <a href="#">Sports: Championship Highlights</a>
-          </li>
+          {articles.slice(0, 4).map((article, index) => (
+            <li key={index} className="video-list-item">
+              <a href={article.url || article.link} target="_blank" rel="noreferrer">
+                {article.title}
+              </a>
+            </li>
+          ))}
         </ul>
       </aside>
     </div>

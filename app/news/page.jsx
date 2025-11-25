@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
+import { extractCategory, getCategoryAbbr } from '../../helpers/extractCategory';
 
 export default function NewsPage() {
   const [articles, setArticles] = useState([]);
@@ -143,7 +144,9 @@ export default function NewsPage() {
                   onError={(e) => { e.currentTarget.style.display = 'none'; }} 
                 />
               )}
-              <span className="category-label">NEWS</span>
+              <span className="category-label">
+                {getCategoryAbbr(extractCategory(article.title + ' ' + (article.summary || article.snippet || '')))}
+              </span>
               <h3>
                 <a href={a.url || a.link} target="_blank" rel="noreferrer">
                   {a.title}

@@ -16,11 +16,9 @@ export async function GET(request) {
       );
     }
 
-    if (!GOOGLE_API_KEY) {
-      return NextResponse.json(
-        { error: 'GOOGLE_API_KEY is not configured' },
-        { status: 500 }
-      );
+    // Gemini API key is optional - we'll use fallback summaries if not available
+    if (!GOOGLE_API_KEY || GOOGLE_API_KEY === 'your-google-ai-api-key-here') {
+      console.warn('GOOGLE_API_KEY not configured, will use fallback summaries');
     }
 
     const { searchParams } = new URL(request.url);
@@ -67,9 +65,39 @@ export async function GET(request) {
       }
     }
 
-    // Step 3: Summarize each trend with Gemini
-    console.log('Summarizing trends with Gemini...');
-    const summaries = await summarizeTrendsWithGemini(trendsWithData, GOOGLE_API_KEY);
+    // Step 3: Summarize each trend with Gemini (with fallback)
+    let summaries = [];
+    if (GOOGLE_API_KEY && GOOGLE_API_KEY !== 'your-google-ai-api-key-here') {
+      try {
+        console.log('Summarizing trends with Gemini...');
+        summaries = await summarizeTrendsWithGemini(trendsWithData, GOOGLE_API_KEY);
+        
+        // If summarization failed, create fallback summaries
+        if (!summaries || summaries.length === 0) {
+          console.warn('Gemini summarization failed, using fallback summaries');
+          summaries = trendsWithData.map(({ topic }) => ({
+            topic,
+            summary: `${topic} is currently trending and generating significant public interest. Stay updated with the latest developments on this topic.`,
+            timestamp: new Date().toISOString()
+          }));
+        }
+      } catch (geminiError) {
+        console.error('Gemini API error, using fallback summaries:', geminiError.message);
+        summaries = trendsWithData.map(({ topic }) => ({
+          topic,
+          summary: `${topic} is currently trending and generating significant public interest. Stay updated with the latest developments on this topic.`,
+          timestamp: new Date().toISOString()
+        }));
+      }
+    } else {
+      // No API key, use fallback summaries
+      console.log('No Gemini API key, using fallback summaries');
+      summaries = trendsWithData.map(({ topic }) => ({
+        topic,
+        summary: `${topic} is currently trending and generating significant public interest. Stay updated with the latest developments on this topic.`,
+        timestamp: new Date().toISOString()
+      }));
+    }
 
     // Step 4: Fetch manually added published news that match trending topics
     await connectDB();
