@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/lib/*": ["./lib/*"],
+      "@/models/*": ["./models/*"],
+      "@/middleware/*": ["./middleware/*"],
+      "@/helpers/*": ["./helpers/*"]
+    }
+  },
+  "exclude": ["node_modules", ".next"]
+}
+

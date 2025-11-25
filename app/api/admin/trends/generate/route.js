@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import connectDB from '../../../../lib/mongodb';
-import News from '../../../../models/News';
-import User from '../../../../models/User';
-import { requireAdmin } from '../../../../middleware/auth';
+import connectDB from '@/lib/mongodb';
+import News from '@/models/News';
+import User from '@/models/User';
+import { requireAdmin } from '@/middleware/auth';
 
 // Import helpers
-import { fetchTrendingSearches } from '../../../../helpers/fetchTrends';
-import { fetchNewsForTrends } from '../../../../helpers/fetchNewsForTrend';
-import { processTrendsWithGemini } from '../../../../helpers/processWithGemini';
+import { fetchTrendingSearches } from '@/helpers/fetchTrends';
+import { fetchNewsForTrends } from '@/helpers/fetchNewsForTrend';
+import { processTrendsWithGemini } from '@/helpers/processWithGemini';
 
 const SERPAPI_KEY = process.env.SERPAPI_KEY;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;

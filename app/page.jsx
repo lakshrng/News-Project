@@ -1,60 +1,162 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import Link from 'next/link';
 
 export default function HomePage() {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [briefs, setBriefs] = useState([]);
+
+  useEffect(() => {
+    fetchNews();
+  }, []);
+
+  const fetchNews = async () => {
+    try {
+      setLoading(true);
+      const resp = await axios.get('/api/news?limit=15');
+      if (resp.data?.success) {
+        const allArticles = resp.data.articles || [];
+        setArticles(allArticles);
+        // Use first 8 articles for briefs sidebar
+        setBriefs(allArticles.slice(0, 8));
+      }
+    } catch (err) {
+      console.error('Error loading news:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get hero article (first article)
+  const heroArticle = articles[0];
+  // Get sub-stories (next 2 articles)
+  const subStories = articles.slice(1, 3);
+  // Get remaining articles for briefs
+  const remainingBriefs = articles.slice(3, 11);
+
   return (
-    <section className="section">
-      <h2 className="page-title">Gemini-Powered News Hub</h2>
-      <p className="subtitle">
-        Choose the experience you need: live Google News headlines or Google Trends summaries.
-      </p>
+    <div className="three-column-layout">
+      {/* Column 1: Top Briefs Sidebar */}
+      <aside className="briefs-sidebar">
+        <h2 className="briefs-header">Top Briefs</h2>
+        {loading ? (
+          <div className="spinner">
+            <div className="spinner-dot"></div>
+            <div className="spinner-dot"></div>
+            <div className="spinner-dot"></div>
+          </div>
+        ) : (
+          <>
+            {remainingBriefs.map((article, index) => (
+              <div key={index} className="brief-item">
+                <span className="brief-category">POLITICS</span>
+                <h3 className="brief-headline">
+                  <a href={article.url || article.link} target="_blank" rel="noreferrer">
+                    {article.title}
+                  </a>
+                </h3>
+              </div>
+            ))}
+          </>
+        )}
+      </aside>
 
-      <div
-        style={{
-          display: 'grid',
-          gap: '20px',
-          marginTop: '30px',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-        }}
-      >
-        <div
-          style={{
-            border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '24px',
-            background: 'var(--card)',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-          }}
-        >
-          <h3 style={{ marginBottom: '10px' }}>Normal News</h3>
-          <p style={{ color: 'var(--muted)', marginBottom: '16px' }}>
-            Pulls the latest Google News search results via SerpAPI and distills every headline with Gemini.
-          </p>
-          <Link className="btn" href="/news">
-            View Headlines
-          </Link>
+      {/* Column 2: Cover Story (Center) */}
+      <main className="cover-story">
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+            <div className="spinner">
+              <div className="spinner-dot"></div>
+              <div className="spinner-dot"></div>
+              <div className="spinner-dot"></div>
+            </div>
+          </div>
+        ) : heroArticle ? (
+          <>
+            <article className="hero-article">
+              <h1 className="hero-headline">
+                <a href={heroArticle.url || heroArticle.link} target="_blank" rel="noreferrer">
+                  {heroArticle.title}
+                </a>
+              </h1>
+              {heroArticle.image_url && (
+                <img 
+                  src={heroArticle.image_url} 
+                  alt={heroArticle.title}
+                  className="hero-image"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              )}
+              <p className="hero-summary">
+                {heroArticle.summary || heroArticle.snippet}
+              </p>
+              <small className="muted">
+                Source: {heroArticle.source || 'Google News'} 
+                {heroArticle.published_at && ` · ${heroArticle.published_at}`}
+              </small>
+            </article>
+
+            {/* Sub-stories */}
+            <div className="sub-stories">
+              {subStories.map((article, index) => (
+                <article key={index} className="sub-story">
+                  <h3 className="sub-story-headline">
+                    <a href={article.url || article.link} target="_blank" rel="noreferrer">
+                      {article.title}
+                    </a>
+                  </h3>
+                  <p style={{ 
+                    fontFamily: 'Roboto, Arial, sans-serif', 
+                    fontSize: '13px', 
+                    color: 'var(--slate-gray)', 
+                    marginTop: '8px',
+                    lineHeight: '1.5'
+                  }}>
+                    {article.summary || article.snippet}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="muted">No articles available.</p>
+        )}
+      </main>
+
+      {/* Column 3: Observer Watch (Right) */}
+      <aside className="observer-watch">
+        <div className="watch-header">
+          <h3>Featured Videos</h3>
+          <span className="watch-chevron">›</span>
+        </div>
+        
+        <div className="video-thumbnail">
+          <img 
+            src="https://via.placeholder.com/400x200/121212/D32F2F?text=Observer+Watch" 
+            alt="Featured Video"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+          <div className="play-button">▶</div>
         </div>
 
-        <div
-          style={{
-            border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '24px',
-            background: 'var(--card)',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-          }}
-        >
-          <h3 style={{ marginBottom: '10px' }}>Trending News</h3>
-          <p style={{ color: 'var(--muted)', marginBottom: '16px' }}>
-            Tracks the hottest Google Trends topics in India, runs a deep search, and summarizes each story.
-          </p>
-          <Link className="btn" href="/trending">
-            View Trending Topics
-          </Link>
-        </div>
-      </div>
-    </section>
+        <ul className="video-list">
+          <li className="video-list-item">
+            <a href="#">Budget 2025: Complete Analysis</a>
+          </li>
+          <li className="video-list-item">
+            <a href="#">Election Coverage: Live Updates</a>
+          </li>
+          <li className="video-list-item">
+            <a href="#">Tech Industry: Growth Report</a>
+          </li>
+          <li className="video-list-item">
+            <a href="#">Sports: Championship Highlights</a>
+          </li>
+        </ul>
+      </aside>
+    </div>
   );
 }
-

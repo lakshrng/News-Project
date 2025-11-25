@@ -5,6 +5,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const CHUNK_SIZE = 5;
+const GROUNDED_TOOLS = [
+  {
+    googleSearch: {},
+  },
+];
 
 function chunkArray(arr = [], size = 5) {
   const chunks = [];
@@ -33,7 +38,9 @@ async function summarizeNewsChunk(chunk, apiKey) {
   }));
 
   const prompt = `You will receive up to ${chunk.length} Google News results as JSON.
-For each story, write EXACTLY two sentences (40-60 words total) that explain the key development and why it matters for Indian readers.
+For each story, write EXACTLY 4 sentences (80-120 words total) that explain the key development and why it matters for Indian readers.
+Before drafting the summary for a story, you MUST call google_search with the story title (or the most relevant keywords) to retrieve fresh context specific to that story.
+Use ONLY the google_search results you just fetched for that story and cite at least one fetched source inline (e.g., "— Source: BBC"). Summaries without a citation are invalid.
 Keep the order identical to the input.
 
 Input articles:
@@ -43,12 +50,20 @@ Respond ONLY with valid JSON in this shape (no extra text, code fences, or comme
 [
   {
     "order": 1,
-    "summary": "Two-sentence summary here."
+    "summary": "Four-sentence summary here."
   }
 ]`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+      ],
+      tools: GROUNDED_TOOLS,
+    });
     const response = result.response.text() || "";
     const jsonMatch = response.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {

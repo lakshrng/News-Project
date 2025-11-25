@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import connectDB from '../../../../lib/mongodb';
-import News from '../../../../models/News';
+import connectDB from '@/lib/mongodb';
+import News from '@/models/News';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { requireAdmin } from '../../../../middleware/auth';
+import { requireAdmin } from '@/middleware/auth';
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const ai = GOOGLE_API_KEY && GOOGLE_API_KEY !== 'your-google-ai-api-key-here'

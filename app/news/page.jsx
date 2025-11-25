@@ -21,7 +21,7 @@ export default function NewsPage() {
         setLoading(true);
       }
 
-      const resp = await axios.get('/api/news?limit=10');
+      const resp = await axios.get('/api/news?limit=20');
       if (resp.data?.success) {
         setArticles(resp.data.articles || []);
         setLastUpdated(resp.data.timestamp ? new Date(resp.data.timestamp) : new Date());
@@ -30,7 +30,7 @@ export default function NewsPage() {
         setError(resp.data?.error || 'Failed to fetch news');
       }
     } catch (err) {
-      console.error('Error loading SerpAPI news:', err);
+      console.error('Error loading news:', err);
       setArticles([]);
       setError(err.response?.data?.error || 'Failed to fetch news');
     } finally {
@@ -53,13 +53,22 @@ export default function NewsPage() {
 
   return (
     <section className="section">
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        gap: 16, 
+        flexWrap: 'wrap', 
+        alignItems: 'center',
+        marginBottom: '24px',
+        paddingBottom: '16px',
+        borderBottom: '2px solid var(--ink-black)'
+      }}>
         <div>
-          <h2 className="page-title">News</h2>
+          <h1 className="page-title">Latest News</h1>
           <p className="subtitle">
-            <small>Live headlines · summarized with Gemini</small>
+            Live headlines · Summarized with Gemini AI
             {lastUpdated && (
-              <span style={{ marginLeft: 8, color: 'var(--muted)', fontSize: 12 }}>
+              <span style={{ marginLeft: 8, color: 'var(--slate-gray)', fontSize: 12 }}>
                 · Updated {lastUpdated.toLocaleTimeString()}
               </span>
             )}
@@ -70,50 +79,90 @@ export default function NewsPage() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+      <div style={{ 
+        display: 'flex', 
+        gap: 8, 
+        marginBottom: '24px' 
+      }}>
         <input 
           value={q} 
           onChange={e => setQ(e.target.value)} 
-          type="text" 
+          type="search" 
           placeholder="Search headlines..." 
-          style={{ flex: 1, padding: 10, border: '1px solid var(--border)', borderRadius: 10 }} 
+          style={{ 
+            flex: 1, 
+            padding: '12px 16px', 
+            border: '1px solid #E0E0E0', 
+            borderRadius: '4px',
+            fontFamily: 'Roboto, Arial, sans-serif',
+            fontSize: '14px'
+          }} 
         />
-        <button className="btn" onClick={() => setQ(q)}>Search</button>
       </div>
 
       {error ? (
-        <div className="news-card" style={{ minHeight: 120, padding: 24, background: '#fee', border: '1px solid #fcc', borderRadius: 12 }}>
-          <strong>Error:</strong> {error}
-          <div>
-            <button className="btn" style={{ marginTop: 12 }} onClick={() => fetchNews(true)}>
+        <div style={{ 
+          padding: '24px', 
+          background: '#FEE', 
+          border: '2px solid var(--observer-red)', 
+          borderRadius: '4px',
+          marginBottom: '24px'
+        }}>
+          <strong style={{ color: 'var(--observer-red)' }}>Error:</strong> {error}
+          <div style={{ marginTop: '12px' }}>
+            <button className="btn" onClick={() => fetchNews(true)}>
               Try Again
             </button>
           </div>
         </div>
       ) : loading && !refreshing ? (
-        <div className="news-card" style={{ minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="spinner"><div className="spinner-dot"></div><div className="spinner-dot"></div><div className="spinner-dot"></div></div>
+        <div style={{ 
+          minHeight: '200px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center' 
+        }}>
+          <div className="spinner">
+            <div className="spinner-dot"></div>
+            <div className="spinner-dot"></div>
+            <div className="spinner-dot"></div>
+          </div>
         </div>
       ) : filtered.length === 0 ? (
-        <p className="muted">No news found.</p>
+        <p className="muted" style={{ textAlign: 'center', padding: '40px' }}>
+          No news found.
+        </p>
       ) : (
-        <div className="news-container" style={{ marginTop: 16 }}>
+        <div className="news-container">
           {filtered.map((a, i) => (
             <article className="news-card" key={i}>
-              {a.image_url ? (
-                <img src={a.image_url} alt="News image" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-              ) : null}
-              <h3><a href={a.url || a.link} target="_blank" rel="noreferrer">{a.title}</a></h3>
+              {a.image_url && (
+                <img 
+                  src={a.image_url} 
+                  alt="News image" 
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                />
+              )}
+              <span className="category-label">NEWS</span>
+              <h3>
+                <a href={a.url || a.link} target="_blank" rel="noreferrer">
+                  {a.title}
+                </a>
+              </h3>
               <p>{a.summary || a.snippet}</p>
               <small>
-                Source: {a.source || 'Google News'} {a.published_at ? ` · ${a.published_at}` : ''}
+                Source: {a.source || 'Google News'} 
+                {a.published_at && ` · ${a.published_at}`}
               </small>
-              <Link 
-                className="btn" 
-                href={`/analysis?title=${encodeURIComponent(a.title)}&snippet=${encodeURIComponent(a.summary || a.snippet || '')}&image_url=${encodeURIComponent(a.image_url || '')}`}
-              >
-                Read Analysis
-              </Link>
+              <div style={{ marginTop: '12px' }}>
+                <Link 
+                  className="btn" 
+                  href={`/analysis?title=${encodeURIComponent(a.title)}&snippet=${encodeURIComponent(a.summary || a.snippet || '')}&image_url=${encodeURIComponent(a.image_url || '')}`}
+                  style={{ fontSize: '12px', padding: '8px 16px' }}
+                >
+                  Read Analysis
+                </Link>
+              </div>
             </article>
           ))}
         </div>
@@ -121,4 +170,3 @@ export default function NewsPage() {
     </section>
   );
 }
-

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import connectDB from '../../../../lib/mongodb';
-import News from '../../../../models/News';
-import { requireAdmin } from '../../../../middleware/auth';
+import connectDB from '@/lib/mongodb';
+import News from '@/models/News';
+import { requireAdmin } from '@/middleware/auth';
 
 export async function PATCH(request, { params }) {
   try {
